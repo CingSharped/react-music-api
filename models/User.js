@@ -40,7 +40,7 @@ userSchema.statics.signup = async function(username, password) {
   const salt = await bcrypt.genSalt(saltValue);
   const hash = await bcrypt.hash(password, salt);
 
-  const user = await this.create({ username, password: hash });
+  const user = await this.create({ username, password: hash, likedSongs: []});
 
   return user;
 };
@@ -66,5 +66,45 @@ userSchema.statics.login = async function(username, password) {
 
   return user
 };
+
+
+// static add liked song method
+userSchema.statics.addLikedSong = async function(username, likedSong) {
+  const user = await this.findOne({ username })
+  console.log(user['likedSongs'])
+  if (!user) {
+    throw Error(`User ${username} does not exist`)
+  }
+
+  if (user.likedSongs.includes(likedSong)) {
+    throw Error(`Song "${likedSong}" already liked`)
+  }
+
+  user.likedSongs.push(likedSong);
+
+  await user.save()
+
+  return user['likedSongs']
+}
+
+// static remove liked song method
+userSchema.statics.removeLikedSong = async function(username, song) {
+  const user = await this.findOne({ username });
+  console.log(user["likedSongs"]);
+  if (!user) {
+    throw Error(`User ${username} does not exist`);
+  }
+
+  if (user.likedSongs.includes(song)) {
+    songsIndex = user.likedSongs.indexOf(song)
+    user.likedSongs.splice(songsIndex, 1)
+  } else {
+    throw Error(`Song ${song} is not liked and so cannot be removed`)
+  }
+
+  await user.save();
+
+  return user["likedSongs"];
+}
 
 module.exports = mongoose.model("User", userSchema);
